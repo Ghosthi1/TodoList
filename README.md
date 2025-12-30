@@ -6,8 +6,5 @@
 - Has ability to check of completed
 - Can name the todos
 - Has ability to have due dates
-- Can set colours
-- Has tags
 - Short description
-
-- can send push notifications
+- can edit todos
