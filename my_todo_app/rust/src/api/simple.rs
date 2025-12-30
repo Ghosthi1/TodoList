@@ -24,3 +24,20 @@ pub fn save_todos(path: String, items: Vec<TodoItem>) {
         let _ = fs::write(path, json);
     }
 }
+
+pub fn add_todo(path: String, mut items: Vec<TodoItem>, title: String) -> Vec<TodoItem> {
+    items.push(TodoItem {
+        title,
+        is_done: false
+    });
+    save_todos(path, items.clone());
+    items
+}
+
+pub fn remove_todo(path: String,mut items: Vec<TodoItem>, index: usize ) -> Vec<TodoItem> {
+    if index < items.len() {
+        items.remove(index);
+        save_todos(path, items.clone());
+    }
+    items
+}

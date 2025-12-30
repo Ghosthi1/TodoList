@@ -14,6 +14,26 @@ Future<List<TodoItem>> loadTodos({required String path}) =>
 Future<void> saveTodos({required String path, required List<TodoItem> items}) =>
     RustLib.instance.api.crateApiSimpleSaveTodos(path: path, items: items);
 
+Future<List<TodoItem>> addTodo({
+  required String path,
+  required List<TodoItem> items,
+  required String title,
+}) => RustLib.instance.api.crateApiSimpleAddTodo(
+  path: path,
+  items: items,
+  title: title,
+);
+
+Future<List<TodoItem>> removeTodo({
+  required String path,
+  required List<TodoItem> items,
+  required BigInt index,
+}) => RustLib.instance.api.crateApiSimpleRemoveTodo(
+  path: path,
+  items: items,
+  index: index,
+);
+
 class TodoItem {
   final String title;
   final bool isDone;

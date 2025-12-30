@@ -46,11 +46,20 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   // Action: Add a new item
-  void _addItem() {
+  Future<void> _addItem(String title) async{
+    final updatedList = await addTodo(path: _filePath, items: _todos, title: title);
+
+      setState(() {
+        _todos = updatedList;
+      });
+  }
+
+  // Action:: remove item
+  Future<void> _removeItem(int index) async {
+    final updatedList = await removeTodo(path: _filePath, items: _todos, index: BigInt.from(index));
     setState(() {
-      _todos.add(TodoItem(title: "New Task ${_todos.length + 1}", isDone: false));
+      _todos = updatedList;
     });
-    saveTodos(path: _filePath, items: _todos); // Tell Rust to save
   }
 
   // Action: Toggle a checkbox
@@ -63,6 +72,28 @@ class _TodoPageState extends State<TodoPage> {
       );
     });
     saveTodos(path: _filePath, items: _todos); // Tell Rust to save
+  }
+
+  // Dialog box for adding a new item
+  Future<String?> _showAddDialog() async {
+    TextEditingController controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("New Task"),
+        content: TextField(controller: controller, autofocus: true),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text("Add"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -79,11 +110,20 @@ class _TodoPageState extends State<TodoPage> {
               value: item.isDone,
               onChanged: (_) => _toggleItem(index),
             ),
+            trailing: IconButton (
+              icon: const Icon(Icons.delete),
+              onPressed: () => _removeItem(index),
+            ),
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addItem,
+        onPressed: () async {
+          String? newTitle = await _showAddDialog();
+          if (newTitle != null && newTitle.isNotEmpty) {
+            await _addItem(newTitle);
+          }
+      },
         child: const Icon(Icons.add),
       ),
     );
