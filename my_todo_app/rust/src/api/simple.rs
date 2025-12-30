@@ -6,6 +6,7 @@ use serde::{Serialize, Deserialize};
 pub struct TodoItem {
     pub title: String,
     pub description: String,
+    pub date: String,
     pub is_done: bool,
 }
 
@@ -26,10 +27,11 @@ pub fn save_todos(path: String, items: Vec<TodoItem>) {
     }
 }
 
-pub fn add_todo(path: String, mut items: Vec<TodoItem>, title: String, description: String) -> Vec<TodoItem> {
+pub fn add_todo(path: String, mut items: Vec<TodoItem>, title: String, description: String, date: String) -> Vec<TodoItem> {
     items.push(TodoItem {
         title,
         description,
+        date,
         is_done: false
     });
     save_todos(path, items.clone());

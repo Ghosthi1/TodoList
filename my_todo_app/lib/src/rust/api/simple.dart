@@ -19,11 +19,13 @@ Future<List<TodoItem>> addTodo({
   required List<TodoItem> items,
   required String title,
   required String description,
+  required String date,
 }) => RustLib.instance.api.crateApiSimpleAddTodo(
   path: path,
   items: items,
   title: title,
   description: description,
+  date: date,
 );
 
 Future<List<TodoItem>> removeTodo({
@@ -39,16 +41,19 @@ Future<List<TodoItem>> removeTodo({
 class TodoItem {
   final String title;
   final String description;
+  final String date;
   final bool isDone;
 
   const TodoItem({
     required this.title,
     required this.description,
+    required this.date,
     required this.isDone,
   });
 
   @override
-  int get hashCode => title.hashCode ^ description.hashCode ^ isDone.hashCode;
+  int get hashCode =>
+      title.hashCode ^ description.hashCode ^ date.hashCode ^ isDone.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -57,5 +62,6 @@ class TodoItem {
           runtimeType == other.runtimeType &&
           title == other.title &&
           description == other.description &&
+          date == other.date &&
           isDone == other.isDone;
 }

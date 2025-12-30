@@ -71,6 +71,7 @@ fn wire__crate__api__simple__add_todo_impl(
             let api_items = <Vec<crate::api::simple::TodoItem>>::sse_decode(&mut deserializer);
             let api_title = <String>::sse_decode(&mut deserializer);
             let api_description = <String>::sse_decode(&mut deserializer);
+            let api_date = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -79,6 +80,7 @@ fn wire__crate__api__simple__add_todo_impl(
                         api_items,
                         api_title,
                         api_description,
+                        api_date,
                     ))?;
                     Ok(output_ok)
                 })())
@@ -239,10 +241,12 @@ impl SseDecode for crate::api::simple::TodoItem {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_title = <String>::sse_decode(deserializer);
         let mut var_description = <String>::sse_decode(deserializer);
+        let mut var_date = <String>::sse_decode(deserializer);
         let mut var_isDone = <bool>::sse_decode(deserializer);
         return crate::api::simple::TodoItem {
             title: var_title,
             description: var_description,
+            date: var_date,
             is_done: var_isDone,
         };
     }
@@ -311,6 +315,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::simple::TodoItem {
         [
             self.title.into_into_dart().into_dart(),
             self.description.into_into_dart().into_dart(),
+            self.date.into_into_dart().into_dart(),
             self.is_done.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -364,6 +369,7 @@ impl SseEncode for crate::api::simple::TodoItem {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.title, serializer);
         <String>::sse_encode(self.description, serializer);
+        <String>::sse_encode(self.date, serializer);
         <bool>::sse_encode(self.is_done, serializer);
     }
 }

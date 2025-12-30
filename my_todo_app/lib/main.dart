@@ -49,8 +49,9 @@ class _TodoPageState extends State<TodoPage> {
   Future<void> _addItem(Map<String,String> newEntry) async{
     final String title = newEntry['title'] ?? "";
     final String description = newEntry['description'] ?? "";
+    final String date = newEntry['date'] ?? "";
 
-    final updatedList = await addTodo(path: _filePath, items: _todos, title: title, description: description);
+    final updatedList = await addTodo(path: _filePath, items: _todos, title: title, description: description, date: date);
 
       setState(() {
         _todos = updatedList;
@@ -72,17 +73,32 @@ class _TodoPageState extends State<TodoPage> {
       _todos[index] = TodoItem(
         title: _todos[index].title,
         description: _todos[index].description,
+        date: _todos[index].date,
         isDone: !_todos[index].isDone,
       );
     });
     saveTodos(path: _filePath, items: _todos); // Tell Rust to save
+
+  }
+
+  Future<void> _editItem(int index, Map<String, String> updatedEntry) async {
+    setState(() {
+      _todos[index] = TodoItem(
+        title: updatedEntry['title'] ?? _todos[index].title,
+        description: updatedEntry['description'] ?? _todos[index].description,
+        date: updatedEntry['date'] ?? _todos[index].date,
+        isDone: _todos[index].isDone,
+      );
+    });
+    // Save the updated list to the file via Rust
+    await saveTodos(path: _filePath, items: _todos);
   }
 
   // Dialog box for adding a new item
   Future<Map<String, String>?> _showAddDialog() async {
     TextEditingController controller = TextEditingController();
     TextEditingController descriptionController = TextEditingController();
-
+    TextEditingController dateController = TextEditingController();
     final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
     return showDialog<Map<String, String>>(
@@ -113,6 +129,27 @@ class _TodoPageState extends State<TodoPage> {
             controller: descriptionController,
               decoration: const InputDecoration(hintText: "Task Description"),
           ),
+
+          TextFormField(
+            controller: dateController,
+            readOnly: true,
+            decoration: const InputDecoration(hintText: "Task Date"),
+            validator: (value) => value == null || value.isEmpty ? "Please select a date" : null,
+            onTap: () async {
+              DateTime? pickedDate = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2101),
+              );
+              if (pickedDate != null) {
+                String formattedDate = "${pickedDate.year}-${pickedDate.month}-${pickedDate.day}";
+                dateController.text = formattedDate;
+              } else {
+                print("Date is not selected");
+              }
+            }
+          )
         ],
       ),
     ),
@@ -120,10 +157,7 @@ class _TodoPageState extends State<TodoPage> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context, {
-                'title': controller.text,
-                'description': descriptionController.text,
-              });
+              Navigator.pop(context, null);
             },
             child: const Text("Cancel"),
           ),
@@ -133,6 +167,7 @@ class _TodoPageState extends State<TodoPage> {
                 Navigator.pop(context, {
                   'title': controller.text,
                   'description': descriptionController.text,
+                  'date': dateController.text,
                 });
               }
             },
@@ -159,20 +194,40 @@ class _TodoPageState extends State<TodoPage> {
               value: item.isDone,
               onChanged: (_) => _toggleItem(index),
             ),
-            trailing: IconButton (
-              icon: const Icon(Icons.delete),
-              onPressed: () => _removeItem(index),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  item.date,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () async {
+                    final updatedEntry = await _showAddDialog();
+                    if (updatedEntry != null) {
+                      await _editItem(index, updatedEntry);
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () => _removeItem(index),
+                ),
+              ],
             ),
           );
         },
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           Map<String, String>? newEntry = await _showAddDialog();
-          if (newEntry != null && newEntry.isNotEmpty) {
+          if (newEntry != null && newEntry['title']?.isNotEmpty == true) {
             await _addItem(newEntry);
           }
-      },
+        },
         child: const Icon(Icons.add),
       ),
     );
