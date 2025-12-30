@@ -79,6 +79,7 @@ abstract class RustLibApi extends BaseApi {
     required String path,
     required List<TodoItem> items,
     required String title,
+    required String description,
   });
 
   Future<List<TodoItem>> crateApiSimpleLoadTodos({required String path});
@@ -108,6 +109,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required List<TodoItem> items,
     required String title,
+    required String description,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -116,6 +118,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(path, serializer);
           sse_encode_list_todo_item(items, serializer);
           sse_encode_String(title, serializer);
+          sse_encode_String(description, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -128,7 +131,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: null,
         ),
         constMeta: kCrateApiSimpleAddTodoConstMeta,
-        argValues: [path, items, title],
+        argValues: [path, items, title, description],
         apiImpl: this,
       ),
     );
@@ -136,7 +139,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiSimpleAddTodoConstMeta => const TaskConstMeta(
     debugName: "add_todo",
-    argNames: ["path", "items", "title"],
+    argNames: ["path", "items", "title", "description"],
   );
 
   @override
@@ -263,11 +266,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TodoItem dco_decode_todo_item(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return TodoItem(
       title: dco_decode_String(arr[0]),
-      isDone: dco_decode_bool(arr[1]),
+      description: dco_decode_String(arr[1]),
+      isDone: dco_decode_bool(arr[2]),
     );
   }
 
@@ -325,8 +329,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TodoItem sse_decode_todo_item(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_title = sse_decode_String(deserializer);
+    var var_description = sse_decode_String(deserializer);
     var var_isDone = sse_decode_bool(deserializer);
-    return TodoItem(title: var_title, isDone: var_isDone);
+    return TodoItem(
+      title: var_title,
+      description: var_description,
+      isDone: var_isDone,
+    );
   }
 
   @protected
@@ -390,6 +399,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_todo_item(TodoItem self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.title, serializer);
+    sse_encode_String(self.description, serializer);
     sse_encode_bool(self.isDone, serializer);
   }
 

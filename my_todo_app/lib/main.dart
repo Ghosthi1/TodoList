@@ -46,8 +46,11 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   // Action: Add a new item
-  Future<void> _addItem(String title) async{
-    final updatedList = await addTodo(path: _filePath, items: _todos, title: title);
+  Future<void> _addItem(Map<String,String> newEntry) async{
+    final String title = newEntry['title'] ?? "";
+    final String description = newEntry['description'] ?? "";
+
+    final updatedList = await addTodo(path: _filePath, items: _todos, title: title, description: description);
 
       setState(() {
         _todos = updatedList;
@@ -68,6 +71,7 @@ class _TodoPageState extends State<TodoPage> {
     //Create a copy with the new value and replace the item in the list
       _todos[index] = TodoItem(
         title: _todos[index].title,
+        description: _todos[index].description,
         isDone: !_todos[index].isDone,
       );
     });
@@ -75,23 +79,67 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   // Dialog box for adding a new item
-  Future<String?> _showAddDialog() async {
+  Future<Map<String, String>?> _showAddDialog() async {
     TextEditingController controller = TextEditingController();
-    return showDialog<String>(
+    TextEditingController descriptionController = TextEditingController();
+
+    final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+    return showDialog<Map<String, String>>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("New Task"),
-        content: TextField(controller: controller, autofocus: true),
+        title: const Text("Create a Task"),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(hintText: "Task Name"),
+
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Please enter a task name";
+                  }
+                  return null;
+                },
+              ),
+
+          const SizedBox(height: 10),
+
+          TextFormField(
+            controller: descriptionController,
+              decoration: const InputDecoration(hintText: "Task Description"),
+          ),
+        ],
+      ),
+    ),
+
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context, {
+                'title': controller.text,
+                'description': descriptionController.text,
+              });
+            },
             child: const Text("Cancel"),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, controller.text),
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                Navigator.pop(context, {
+                  'title': controller.text,
+                  'description': descriptionController.text,
+                });
+              }
+            },
             child: const Text("Add"),
           ),
         ],
+
       ),
     );
   }
@@ -99,13 +147,14 @@ class _TodoPageState extends State<TodoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Rust + Flutter Todo")),
+      appBar: AppBar(title: const Text("Rust + Flutter Todo List")),
       body: ListView.builder(
         itemCount: _todos.length,
         itemBuilder: (context, index) {
           final item = _todos[index];
           return ListTile(
             title: Text(item.title),
+            subtitle: Text(item.description),
             leading: Checkbox(
               value: item.isDone,
               onChanged: (_) => _toggleItem(index),
@@ -119,9 +168,9 @@ class _TodoPageState extends State<TodoPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          String? newTitle = await _showAddDialog();
-          if (newTitle != null && newTitle.isNotEmpty) {
-            await _addItem(newTitle);
+          Map<String, String>? newEntry = await _showAddDialog();
+          if (newEntry != null && newEntry.isNotEmpty) {
+            await _addItem(newEntry);
           }
       },
         child: const Icon(Icons.add),
