@@ -9,5 +9,5 @@
 - Can set colours
 - Has tags
 - Short description
-
+- can edit todos
 - can send push notifications
