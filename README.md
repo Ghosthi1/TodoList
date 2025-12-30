@@ -8,4 +8,3 @@
 - Has ability to have due dates
 - Short description
 - can edit todos
-- can send push notifications
